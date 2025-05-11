@@ -1,47 +1,51 @@
 package config
 
 import (
-	"os"
-	"strconv"
+	"log"
+	"time"
+
+	"github.com/spf13/viper"
 )
 
 type Config struct {
-	DBHost     string
-	DBPort     int
-	DBUser     string
-	DBPassword string
-	DBName     string
-	JWTSecret  string
-	SMTPHost   string
-	SMTPPort   int
-	SMTPUser   string
-	SMTPPass   string
-	PGPKeyPath string
-}
+	Server struct {
+		Port int
+	}
 
-func LoadConfig() *Config {
-	dbPort, _ := strconv.Atoi(getEnv("DB_PORT", "5432"))
-	smtpPort, _ := strconv.Atoi(getEnv("SMTP_PORT", "587"))
+	Database struct {
+		Host string
+		Port int
+		User string
+		Pass string
+		Name string
+	}
 
-	return &Config{
-		DBHost:     getEnv("DB_HOST", "localhost"),
-		DBPort:     dbPort,
-		DBUser:     getEnv("DB_USER", "postgres"),
-		DBPassword: getEnv("DB_PASSWORD", "postgres"),
-		DBName:     getEnv("DB_NAME", "bank_api"),
-		JWTSecret:  getEnv("JWT_SECRET", "your-secret-key"),
-		SMTPHost:   getEnv("SMTP_HOST", "smtp.example.com"),
-		SMTPPort:   smtpPort,
-		SMTPUser:   getEnv("SMTP_USER", "noreply@example.com"),
-		SMTPPass:   getEnv("SMTP_PASS", "strong_password"),
-		PGPKeyPath: getEnv("PGP_KEY_PATH", "./keys"),
+	JWT struct {
+		Host         string
+		Port         int
+		User         string
+		Pass         string
+		ExpiresHours time.Duration // Время жизни JWT токена в часах
+	}
+
+	CBR struct {
+		URL string
 	}
 }
 
-func getEnv(key, defaultValue string) string {
-	value := os.Getenv(key)
-	if value == "" {
-		return defaultValue
+func LoadConfig(path string) *Config {
+	viper.SetConfigFile(path)
+	if err := viper.ReadInConfig(); err != nil {
+		log.Fatalf("Error reading config file: %v", err)
 	}
-	return value
+
+	var cfg Config
+	if err := viper.Unmarshal(&cfg); err != nil {
+		log.Fatalf("Unable to decode into struct: %v", err)
+	}
+
+	// интерпретируем jwt.ExpiresHours как часы
+	cfg.JWT.ExpiresHours = cfg.JWT.ExpiresHours * time.Hour
+
+	return &cfg
 }

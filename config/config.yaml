@@ -1,0 +1,22 @@
+server:
+  port: 8080
+
+database:
+  host: localhost
+  port: 5432
+  user: postgres
+  pass: 1666
+  name: postgres
+
+jwt:
+  secret: your_jwt_secret
+  expires_hours: 72
+
+smtp:
+  host: smtp.example.com
+  port: 587
+  user: notify@example.com
+  pass: smtp_password
+
+cbr:
+  url: https://www.cbr.ru/DailyInfoWebServ/DailyInfo.asmx
